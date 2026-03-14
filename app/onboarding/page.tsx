@@ -41,8 +41,10 @@ function SidebarCoil({ step }: { step: string }) {
     const ctx = canvas.getContext('2d')!
     const pass = { canvas, active: true, cleaned: false }
     passesRef.current.push(pass)
+    const passIdx = passesRef.current.length - 1
 
     const color = COIL_COLORS[step] ?? COIL_COLORS.name
+    const lineWidth = 2.2 + passIdx * 0.5
     const wR = mkD(56 / (2 * Math.PI), 3.5), arm = mkD(22, 9), squeeze = mkD(1.0, 0.45), offset = mkD(0, 6)
     let t = 0, px = W / 2, py = 0
     const tick = (d: Drifter, minV = -Infinity) => {
@@ -57,7 +59,7 @@ function SidebarCoil({ step }: { step: string }) {
         t += 0.045; tick(wR, 2); tick(arm, 4); tick(squeeze); tick(offset)
         const y = wR.v * t + arm.v * squeeze.v * Math.cos(t) + offset.v
         const x = BAR_BASE + BAR_AMP * Math.sin(y * BAR_FREQ_PER_PX) + arm.v * Math.sin(t)
-        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2.2
+        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = lineWidth
         ctx.lineCap = 'round'; ctx.lineJoin = 'round'
         ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke()
         px = x; py = y
@@ -96,9 +98,9 @@ const STEP_PALETTES: Record<string, string[]> = {
 
 const COIL_COLORS: Record<string, string> = {
   name:  'rgba(234,88,12,0.55)',
-  phone: 'rgba(236,72,153,0.55)',
+  phone: 'rgba(249,168,212,0.75)',
   time:  'rgba(167,243,208,0.75)',
-  bio:   'rgba(14,165,233,0.55)',
+  bio:   'rgba(125,211,252,0.75)',
   done:  'rgba(245,158,11,0.55)',
 }
 
@@ -205,10 +207,9 @@ export default function OnboardingPage() {
     }
   }
 
-  const stepIndex    = STEPS.indexOf(step)
-  const displayStep  = stepIndex + 1                          // 1-based for display
-  const totalSteps   = STEPS.length - 1                      // exclude 'done'
-  const progress     = (displayStep / totalSteps) * 100
+  const stepIndex  = STEPS.indexOf(step)
+  const totalSteps = STEPS.length - 1
+  const progress   = (stepIndex / totalSteps) * 100
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: T.bg, fontFamily: "'Montserrat', sans-serif", position: 'relative', overflowX: 'hidden' }}>
@@ -236,7 +237,7 @@ export default function OnboardingPage() {
           <div style={{ width: '100%', maxWidth: 480, marginBottom: 48 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 10, color: T.muted, letterSpacing: '0.15em', fontWeight: 600 }}>SETUP</span>
-              <span style={{ fontSize: 10, color: T.muted, letterSpacing: '0.15em' }}>{displayStep}/{totalSteps}</span>
+              <span style={{ fontSize: 10, color: T.muted, letterSpacing: '0.15em' }}>{stepIndex}/{totalSteps}</span>
             </div>
             <div style={{ height: 2, background: T.border, borderRadius: 2 }}>
               <div style={{ height: '100%', width: `${progress}%`, background: `linear-gradient(90deg, ${T.accent}, #f97316)`, borderRadius: 2, transition: 'width 0.4s ease' }} />

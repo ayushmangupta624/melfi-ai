@@ -1,7 +1,7 @@
 'use client'
 
 import { OnboardingData } from '../page'
-import { StepLabel, StepHeading, StepSub, Button, BackButton } from '../components'
+import { StepHeading, StepSub, Button, BackButton } from '../components'
 
 interface Props {
   data: OnboardingData
@@ -54,8 +54,7 @@ export default function StepTime({ data, update, onNext, onBack }: Props) {
   return (
     <div>
       <BackButton onClick={onBack} />
-      <StepLabel>Step 3 of 4</StepLabel>
-      <StepHeading>When should we call?</StepHeading>
+<StepHeading>When should we call?</StepHeading>
       <StepSub>Pick a time you'll consistently be free to talk for 3–5 minutes.</StepSub>
 
       {/* Time slot picker */}

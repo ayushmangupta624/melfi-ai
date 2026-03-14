@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { OnboardingData } from '../page'
-import { StepLabel, StepHeading, StepSub, Input, Button, BackButton } from '../components'
+import { StepHeading, StepSub, Input, Button, BackButton } from '../components'
 
 interface Props {
   data: OnboardingData
@@ -49,8 +49,7 @@ export default function StepPhone({ data, update, onNext, onBack }: Props) {
   return (
     <div>
       <BackButton onClick={onBack} />
-      <StepLabel>Step 2 of 4</StepLabel>
-      <StepHeading>Your phone number</StepHeading>
+<StepHeading>Your phone number</StepHeading>
       <StepSub>
         The AI will call this number daily. Standard call rates apply.
         Must be a number verified in your country.
