@@ -187,15 +187,15 @@ const T = {
 }
 
 const PROJECT_NAME = 'Melfi'
-const DESCRIPTION  = "Talk through what's on your mind with an empathetic AI that listens, remembers, and grows with you — session by session."
+const DESCRIPTION  = "Talk through what's on your mind daily with an empathetic AI that listens, remembers, and grows with you — session by session."
 
 const FEATURES = [
-  { icon: '🎙️', title: 'voice-first sessions',  description: 'Speak naturally and let our AI listen. No typing, no forms — just a conversation.' },
-  { icon: '🧠', title: 'adaptive techniques',    description: 'Reflective listening, cognitive reframing, Socratic questioning, and somatic approaches — tailored to you.' },
-  { icon: '📈', title: 'emotional terrain',      description: 'Visualize your mood journey over time with a beautiful 3D emotional landscape unique to your sessions.' },
-  { icon: '🔒', title: 'private & secure',       description: 'Your conversations are yours. End-to-end security powered by Supabase ensures your data stays private.' },
-  { icon: '⚡', title: 'always available',       description: 'No scheduling, no waitlists. Start a session whenever you need — day or night.' },
-  { icon: '🌱', title: 'grows with you',         description: 'The AI builds a memory of your history, so every session picks up right where you left off.' },
+  { icon: '', title: 'voice based sessions',  description: 'Speak naturally and let our AI listen. A conversation is all you need to express youself.' },
+  { icon: '', title: 'adaptive techniques',    description: 'Reflective listening and cognitive reframing tailored to you.' },
+  { icon: '', title: 'emotional terrain',      description: 'Visualize your mood journey over time with a beautiful 3D emotional landscape unique to your sessions.' },
+  { icon: '', title: 'private & secure',       description: 'Your conversations are yours. End-to-end security powered by Supabase and our privately hosted model ensures your data stays private.' },
+  { icon: '', title: 'always available',       description: 'No scheduling, no waitlists. Start a session whenever you need — day or night.' },
+  { icon: '', title: 'grows with you',         description: 'The AI builds a memory of your history, so every session picks up right where you left off.' },
 ]
 
 const TESTIMONIALS = [
