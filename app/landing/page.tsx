@@ -186,7 +186,7 @@ const T = {
   altBg:  '#F2EDE4', coil:   'rgba(234,88,12,0.55)',
 }
 
-const PROJECT_NAME = 'MindSpace'
+const PROJECT_NAME = 'Melfi'
 const DESCRIPTION  = "Talk through what's on your mind with an empathetic AI that listens, remembers, and grows with you — session by session."
 
 const FEATURES = [
@@ -339,7 +339,7 @@ export default function LandingPage() {
         <div className="max-w-3xl">
           <p className="text-sm font-medium mb-6" style={{ color: T.accent }}>AI · Voice · Mental Wellness</p>
           <h1 className="text-6xl md:text-7xl font-bold leading-tight tracking-tight mb-6" style={{ color: T.text }}>
-            welcome to <span className="font-bold">{PROJECT_NAME.toLowerCase()}.</span>
+            Welcome to <span className="font-bold">{PROJECT_NAME}.</span>
           </h1>
           <p className="text-sm max-w-lg leading-relaxed mb-10" style={{ color: T.muted }}>{DESCRIPTION}</p>
           <div className="flex flex-wrap gap-4">
