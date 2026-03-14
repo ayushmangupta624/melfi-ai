@@ -44,7 +44,7 @@ Context from prior sessions with this user:
 
       maxDurationSeconds: 360,
       silenceTimeoutSeconds: 30,
-      responseDelaySeconds: 0.5,     // slight pause feels more human
+      responseDelaySeconds: 0.2,     // slight pause feels more human
 
       serverUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/vapi/webhook`,
     }),

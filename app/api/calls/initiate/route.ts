@@ -144,17 +144,21 @@ export async function POST() {
   })
 
   const vapiCall = await vapiRes.json()
-  console.log('Vapi response:', JSON.stringify(vapiCall, null, 2))
+  console.log('Vapi call ID:', vapiCall.id)
+  console.log('Supabase call record ID:', callRecord.id)
 
   if (!vapiCall.id) {
     await service.from('calls').update({ status: 'failed' }).eq('id', callRecord.id)
+    console.log('Vapi error:', JSON.stringify(vapiCall, null, 2))
     return NextResponse.json({ error: 'Vapi failed to initiate call' }, { status: 500 })
   }
 
-  await service
+  const { error: updateError } = await service
     .from('calls')
     .update({ vapi_call_id: vapiCall.id, status: 'in_progress' })
     .eq('id', callRecord.id)
+
+  console.log('Update error:', updateError)
 
   return NextResponse.json({ callId: callRecord.id, vapiCallId: vapiCall.id })
 }
