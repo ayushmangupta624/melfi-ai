@@ -987,6 +987,108 @@ export default function EmotionalTerrain({ calls = SAMPLE_CALLS, liveMode = fals
     scene.add(ground)
 
     buildTerrain(scene)
+
+    // ── Ground grid plane ─────────────────────────────────────────────────────
+const gridSize  = 60
+const gridCount = 36   // lines in each direction
+
+// Create custom grid with thick smooth lines using a shader plane
+const gridGeo = new THREE.PlaneGeometry(gridSize, gridSize, gridCount, gridCount)
+gridGeo.rotateX(-Math.PI / 2)
+
+const gridMat = new THREE.ShaderMaterial({
+  transparent: true,
+  side: THREE.DoubleSide,
+  uniforms: { uOpacity: { value: 1.0 } },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec2 vUv;
+    uniform float uOpacity;
+    void main() {
+      vec2 grid = abs(fract(vUv * ${gridCount}.0) - 0.5);
+      float lineX = 1.0 - smoothstep(0.0, 0.018, grid.x);
+      float lineY = 1.0 - smoothstep(0.0, 0.018, grid.y);
+      float line  = max(lineX, lineY);
+      if (line < 0.05) discard;
+      // Fade toward edges
+      float edgeFade = smoothstep(0.0, 0.12, min(vUv.x, min(1.0-vUv.x, min(vUv.y, 1.0-vUv.y))));
+      gl_FragColor = vec4(0.08, 0.06, 0.04, line * 0.18 * edgeFade * uOpacity);
+    }
+  `,
+})
+
+const gridPlane = new THREE.Mesh(gridGeo, gridMat)
+gridPlane.position.y = -0.48   // just below terrain floor
+scene.add(gridPlane)
+
+
+// ── Background particles ──────────────────────────────────────────────────
+const particleCount = 320
+const pPositions    = new Float32Array(particleCount * 3)
+const pSizes        = new Float32Array(particleCount)
+
+for (let i = 0; i < particleCount; i++) {
+  pPositions[i * 3]     = (Math.random() - 0.5) * 50    // x
+  pPositions[i * 3 + 1] = Math.random() * 18 + 1        // y — float above ground
+  pPositions[i * 3 + 2] = (Math.random() - 0.5) * 40    // z
+  pSizes[i]             = Math.random() * 0.5 + 0.15
+}
+
+const pGeo = new THREE.BufferGeometry()
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3))
+pGeo.setAttribute('size',     new THREE.BufferAttribute(pSizes, 1))
+
+const pMat = new THREE.ShaderMaterial({
+  transparent: true,
+  depthWrite:  false,
+  // blending:    THREE.AdditiveBlending,
+  uniforms:    { uTime: { value: 0 } },
+  vertexShader: `
+    attribute float size;
+    uniform float uTime;
+    varying float vAlpha;
+    void main() {
+      vec3 pos = position;
+      // Gentle vertical drift
+      pos.y += sin(uTime * 0.4 + position.x * 0.3 + position.z * 0.2) * 0.35;
+      // Slight horizontal sway
+      pos.x += cos(uTime * 0.25 + position.z * 0.4) * 0.15;
+      vAlpha = 0.3 + sin(uTime * 0.6 + position.y * 0.8) * 0.15;
+      vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+      gl_PointSize = size * (280.0 / -mvPos.z);
+      gl_Position  = projectionMatrix * mvPos;
+    }
+  `,
+  fragmentShader: `
+    varying float vAlpha;
+    void main() {
+      // Soft circular particle
+      vec2  uv   = gl_PointCoord - 0.5;
+      float dist = length(uv);
+      if (dist > 0.5) discard;
+      float alpha = smoothstep(0.5, 0.1, dist) * vAlpha;
+      // Warm terracotta tint
+      gl_FragColor = vec4(0.76, 0.35, 0.14, alpha * 0.55);
+    }
+  `,
+})
+
+const particles = new THREE.Points(pGeo, pMat)
+scene.add(particles)
+
+// Store ref so animate loop can update uTime
+// Add particleMatRef to your refs at top of component:
+// const particleMatRef = useRef<THREE.ShaderMaterial | null>(null)
+// particleMatRef.current = pMat
+
+
+
     buildMarkers(scene)
 
     let isDragging = false
