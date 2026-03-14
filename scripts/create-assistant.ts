@@ -10,19 +10,35 @@ async function main() {
     body: JSON.stringify({
       name: 'TherapistRL',
 
-      // ── Placeholder model (swap url + model when your weights are ready) ──
-      model: {
-        provider: 'anthropic',
-        model: 'claude-sonnet-4-20250514',
-        systemPrompt: `You are a warm, attentive AI therapist conducting a brief daily check-in call.
-Keep responses to 1-2 sentences. Ask only one question at a time.
-Use reflective listening — mirror what the user says before responding.
-Never give unsolicited advice. Never diagnose.
-If the user seems in crisis, say: "It sounds like things are really hard right now. Have you been able to talk to someone you trust, or a professional?"
-Context from prior sessions with this user:
-{{memory}}`,
-        temperature: 0.7,
-      },
+      // ── Placeholder model (claude, if custom model doesn't work) ──
+//       model: {
+//         provider: 'anthropic',
+//         model: 'claude-sonnet-4-20250514',
+//         systemPrompt: `You are a warm, attentive AI therapist conducting a brief daily check-in call.
+// Keep responses to 1-2 sentences. Ask only one question at a time.
+// Use reflective listening — mirror what the user says before responding.
+// Never give unsolicited advice. Never diagnose.
+// If the user seems in crisis, say: "It sounds like things are really hard right now. Have you been able to talk to someone you trust, or a professional?"
+// Context from prior sessions with this user:
+// {{memory}}`,
+//         temperature: 0.7,
+//       },
+
+model: {
+    provider: 'custom-llm',
+    url: process.env.MODEL_ENDPOINT,
+    apiKey: process.env.MODEL_API_KEY,
+    model: 'psycho', 
+    temperature: 0.7,
+    systemPrompt: `You are a warm, attentive AI therapist conducting a brief daily check-in call.
+    Keep responses to 1-2 sentences. Ask only one question at a time.
+    Use reflective listening — mirror what the user says before responding.
+     Never give unsolicited advice. Never diagnose.
+     If the user seems in crisis, say: "It sounds like things are really hard right now. Have you been able to talk to someone you trust, or a professional?"
+     Context from prior sessions with this user:
+     {{memory}}`,
+  },
+  
 
       voice: {
         provider: '11labs',
