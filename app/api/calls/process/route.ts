@@ -1,20 +1,36 @@
 import Groq from 'groq-sdk'
-import { pipeline } from '@xenova/transformers'
+// import { pipeline } from '@xenova/transformers'
 import { createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
-let embedder: any = null
+// let embedder: any = null
 
-async function getEmbedder() {
-  if (!embedder) embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2')
-  return embedder
-}
+// async function getEmbedder() {
+//   if (!embedder) embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2')
+//   return embedder
+// }
 
+// async function embed(text: string): Promise<number[]> {
+//   const model = await getEmbedder()
+//   const output = await model(text, { pooling: 'mean', normalize: true })
+//   return Array.from(output.data)
+// }
 async function embed(text: string): Promise<number[]> {
-  const model = await getEmbedder()
-  const output = await model(text, { pooling: 'mean', normalize: true })
-  return Array.from(output.data)
+  const res = await fetch(
+    'https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.HF_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ inputs: text, options: { wait_for_model: true } }),
+    }
+  )
+  const data = await res.json()
+  // HF returns a nested array for sentence transformers — flatten it
+  return Array.isArray(data[0]) ? data[0] : data
 }
 
 export async function POST(req: Request) {
