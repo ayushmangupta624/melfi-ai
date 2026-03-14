@@ -234,7 +234,7 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [showPanel, setShowPanel] = useState(false)
   const [runKey,    setRunKey]    = useState(0)
-  const [p, setP] = useState<CoilParams>({ organic: 0.175, baseHoop: 56, tweenSpeed: 1, drawSpeed: 0.4 })
+  const [p, setP] = useState<CoilParams>({ organic: 0, baseHoop: 56, tweenSpeed: 1, drawSpeed: 0.4 })
 
   const update = (key: keyof CoilParams, val: number) => {
     setP(prev => ({ ...prev, [key]: val }))
