@@ -40,8 +40,8 @@ export default function StepDone({ name }: { name: string }) {
 
       <h2 style={{
         fontSize: 24,
-        fontWeight: 500,
-        color: '#dce8f5',
+        fontWeight: 700,
+        color: '#1C1917',
         letterSpacing: '-0.02em',
         margin: '0 0 10px',
       }}>
@@ -50,7 +50,7 @@ export default function StepDone({ name }: { name: string }) {
 
       <p style={{
         fontSize: 13,
-        color: '#2d4a6a',
+        color: 'rgba(28,25,23,0.5)',
         margin: '0 0 32px',
         lineHeight: 1.6,
       }}>
@@ -59,10 +59,10 @@ export default function StepDone({ name }: { name: string }) {
       </p>
 
       {/* Loading bar */}
-      <div style={{ height: 1, background: '#0d1e35', borderRadius: 1, overflow: 'hidden' }}>
+      <div style={{ height: 1, background: 'rgba(28,25,23,0.08)', borderRadius: 1, overflow: 'hidden' }}>
         <div style={{
           height: '100%',
-          background: 'linear-gradient(90deg, #1e3a5f, #f59e0b)',
+          background: 'linear-gradient(90deg, #C2410C, #f59e0b)',
           borderRadius: 1,
           animation: 'loadBar 2.8s linear forwards',
         }} />
