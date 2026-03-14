@@ -1,7 +1,7 @@
 'use client'
 
 import { OnboardingData } from '../page'
-import { StepLabel, StepHeading, StepSub, Textarea, Button, BackButton } from '../components'
+import { StepHeading, StepSub, Textarea, Button, BackButton } from '../components'
 
 interface Props {
   data: OnboardingData
@@ -23,8 +23,7 @@ export default function StepBio({ data, update, onNext, onBack, saving }: Props)
   return (
     <div>
       <BackButton onClick={onBack} />
-      <StepLabel>Step 4 of 4</StepLabel>
-      <StepHeading>Give the AI a head start</StepHeading>
+<StepHeading>Give the AI a head start</StepHeading>
       <StepSub>
         Optional. A sentence or two about what's on your mind helps the AI
         skip the small talk and get to what matters.

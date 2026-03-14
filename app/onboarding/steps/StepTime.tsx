@@ -1,7 +1,7 @@
 'use client'
 
 import { OnboardingData } from '../page'
-import { StepLabel, StepHeading, StepSub, Button, BackButton } from '../components'
+import { StepHeading, StepSub, Button, BackButton } from '../components'
 
 interface Props {
   data: OnboardingData
@@ -54,13 +54,12 @@ export default function StepTime({ data, update, onNext, onBack }: Props) {
   return (
     <div>
       <BackButton onClick={onBack} />
-      <StepLabel>Step 3 of 4</StepLabel>
-      <StepHeading>When should we call?</StepHeading>
+<StepHeading>When should we call?</StepHeading>
       <StepSub>Pick a time you'll consistently be free to talk for 3–5 minutes.</StepSub>
 
       {/* Time slot picker */}
       <div style={{ marginBottom: 24 }}>
-        <p style={{ fontSize: 11, color: '#4a6080', letterSpacing: '0.1em', margin: '0 0 10px' }}>
+        <p style={{ fontSize: 11, color: 'rgba(28,25,23,0.45)', letterSpacing: '0.1em', margin: '0 0 10px', fontWeight: 600 }}>
           PREFERRED TIME
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -71,8 +70,8 @@ export default function StepTime({ data, update, onNext, onBack }: Props) {
                 key={slot.value}
                 onClick={() => update({ call_time_pref: slot.value })}
                 style={{
-                  background:   selected ? 'rgba(245,158,11,0.08)' : '#060b14',
-                  border:       `1px solid ${selected ? '#f59e0b' : '#0d1e35'}`,
+                  background:   selected ? 'rgba(194,65,12,0.06)' : 'rgba(28,25,23,0.03)',
+                  border:       `1px solid ${selected ? 'rgba(194,65,12,0.35)' : 'rgba(28,25,23,0.10)'}`,
                   borderRadius: 8,
                   padding:      '10px 14px',
                   textAlign:    'left',
@@ -80,10 +79,10 @@ export default function StepTime({ data, update, onNext, onBack }: Props) {
                   transition:   'all 0.15s',
                 }}
               >
-                <div style={{ fontSize: 13, color: selected ? '#f59e0b' : '#dce8f5', fontFamily: 'inherit', fontWeight: 500 }}>
+                <div style={{ fontSize: 13, color: selected ? '#C2410C' : 'rgba(28,25,23,0.7)', fontFamily: 'inherit', fontWeight: selected ? 600 : 500 }}>
                   {slot.label}
                 </div>
-                <div style={{ fontSize: 10, color: selected ? '#a06010' : '#1e3050', fontFamily: 'inherit', marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: selected ? 'rgba(194,65,12,0.6)' : 'rgba(28,25,23,0.35)', fontFamily: 'inherit', marginTop: 2 }}>
                   {slot.desc}
                 </div>
               </button>
@@ -94,7 +93,7 @@ export default function StepTime({ data, update, onNext, onBack }: Props) {
 
       {/* Timezone */}
       <div style={{ marginBottom: 28 }}>
-        <label style={{ display: 'block', fontSize: 11, color: '#4a6080', letterSpacing: '0.1em', marginBottom: 6 }}>
+        <label style={{ display: 'block', fontSize: 11, color: 'rgba(28,25,23,0.45)', letterSpacing: '0.1em', marginBottom: 6, fontWeight: 600 }}>
           TIMEZONE
         </label>
         <select
@@ -102,28 +101,28 @@ export default function StepTime({ data, update, onNext, onBack }: Props) {
           onChange={e => update({ timezone: e.target.value })}
           style={{
             width: '100%',
-            background: '#060b14',
-            border: '1px solid #0d1e35',
+            background: 'rgba(28,25,23,0.04)',
+            border: '1px solid rgba(28,25,23,0.12)',
             borderRadius: 8,
             padding: '12px 14px',
             fontSize: 13,
-            color: '#dce8f5',
+            color: '#1C1917',
             fontFamily: 'inherit',
             outline: 'none',
             cursor: 'pointer',
             appearance: 'none',
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232d4a6a' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231C1917' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'right 14px center',
           }}
         >
           {TIMEZONES.map(tz => (
-            <option key={tz} value={tz} style={{ background: '#060b14' }}>
+            <option key={tz} value={tz}>
               {tzLabel(tz)}
             </option>
           ))}
         </select>
-        <p style={{ fontSize: 11, color: '#1e3050', margin: '6px 0 0' }}>
+        <p style={{ fontSize: 11, color: 'rgba(28,25,23,0.35)', margin: '6px 0 0' }}>
           Auto-detected · you can change this anytime
         </p>
       </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { OnboardingData } from '../page'
-import { StepLabel, StepHeading, StepSub, Input, Button, BackButton } from '../components'
+import { StepHeading, StepSub, Input, Button, BackButton } from '../components'
 
 interface Props {
   data: OnboardingData
@@ -49,8 +49,7 @@ export default function StepPhone({ data, update, onNext, onBack }: Props) {
   return (
     <div>
       <BackButton onClick={onBack} />
-      <StepLabel>Step 2 of 4</StepLabel>
-      <StepHeading>Your phone number</StepHeading>
+<StepHeading>Your phone number</StepHeading>
       <StepSub>
         The AI will call this number daily. Standard call rates apply.
         Must be a number verified in your country.
@@ -70,8 +69,8 @@ export default function StepPhone({ data, update, onNext, onBack }: Props) {
 
       {/* Trust signal */}
       <div style={{
-        background: '#060b14',
-        border: '1px solid #0a1525',
+        background: 'rgba(28,25,23,0.04)',
+        border: '1px solid rgba(28,25,23,0.08)',
         borderRadius: 8,
         padding: '12px 14px',
         marginBottom: 24,
@@ -80,7 +79,7 @@ export default function StepPhone({ data, update, onNext, onBack }: Props) {
         alignItems: 'flex-start',
       }}>
         <span style={{ fontSize: 16, lineHeight: 1 }}>🔒</span>
-        <p style={{ fontSize: 11, color: '#1e3050', margin: 0, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 11, color: 'rgba(28,25,23,0.4)', margin: 0, lineHeight: 1.6 }}>
           Your number is only used for daily check-in calls. It is never shared or used for marketing.
         </p>
       </div>
