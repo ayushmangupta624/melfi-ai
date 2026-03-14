@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(npm run:*)",
-      "WebFetch(domain:api.github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
-    ]
-  }
-}
