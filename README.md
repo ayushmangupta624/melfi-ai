@@ -1,109 +1,222 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# TherapistRL
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+> *An AI therapist that calls you daily, remembers everything, and gets to know you over time.*
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+TherapistRL is a voice-first AI therapy system that conducts daily check-in calls via your real phone number. After each call, it analyzes the transcript, extracts what mattered, embeds it into a persistent memory store, and walks into the next call already knowing your context. Your emotional history is rendered as a navigable 3D terrain — peaks are good days, valleys are hard ones, and the texture reflects how stable or volatile each session was.
 
-## Features
+---
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+## What makes this different
 
-## Demo
+Most AI therapy products are chat interfaces. TherapistRL makes real outbound phone calls to your mobile number using a custom RLHF fine-tuned therapy model. The AI remembers who you've mentioned, what stresses you out, and how your mood has trended — not because you filled out a profile, but because it has been listening across every session and building a semantic memory of your emotional landscape.
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+---
 
-## Deploy to Vercel
+## The model
 
-Vercel deployment will guide you through creating a Supabase account and project.
+The conversational AI is a Qwen3-8B model fine-tuned using RLHF on curated therapy dialogue datasets. The fine-tuning process aligned the model toward core therapeutic techniques: reflective listening, Socratic questioning, cognitive reframing, and somatic grounding. Chain-of-thought reasoning is disabled at the server level for low-latency real-time voice response.
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+The model is self-hosted, served via vllm with an OpenAI-compatible `/v1/chat/completions` endpoint, and exposed over HTTPS via Cloudflare Tunnel.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+---
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+## System architecture
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+```
+User clicks "Start check-in call"
+  → /api/calls/initiate
+      → fetch top 5 memory chunks from pgvector (cosine similarity)
+      → create calls row in Supabase
+      → POST to Vapi API with phone number + memory context
 
-## Clone and run locally
+Vapi orchestrates the call
+  → Twilio dials the user's real phone number (PSTN)
+  → Deepgram transcribes speech in real time (nova-2)
+  → Qwen3-8B generates therapeutic responses
+  → ElevenLabs synthesizes speech and plays it through the phone
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+Vapi fires webhook events → /api/vapi/webhook
+  → status-update:        set started_at, picked_up = true
+  → conversation-update:  upsert turns to call_turns
+  → end-of-call-report:   mark completed, trigger post-processing
+  → call-failed:          mark missed or failed
 
-2. Create a Next.js app using the Supabase Starter template npx command
+/api/calls/process (async, after call ends)
+  → Groq (Llama 3.1 8B) analyzes transcript
+      → mood_score, sentiment_variance, primary_technique,
+         session_label, themes[], entities[], memory_summary
+  → update calls row with analysis results
+  → embed memory_summary via Transformers.js (local, no API)
+  → store embedding + metadata in memory_chunks (pgvector)
+```
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+---
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+## Memory and RAG
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+Between calls, a RAG layer builds a persistent semantic memory of the user. After each call:
 
-3. Use `cd` to change into the app's directory
+1. Groq extracts a 1-2 sentence memory summary, recurring themes, and named entities from the transcript
+2. The summary is embedded using `all-MiniLM-L6-v2` running locally via Transformers.js — no external API, no cost, 384-dimensional vectors
+3. The embedding is stored in Supabase's pgvector column alongside themes and entities
 
-   ```bash
-   cd with-supabase-app
-   ```
+Before the next call, the initiate route queries:
+```sql
+SELECT content FROM memory_chunks
+WHERE user_id = $1
+ORDER BY embedding <=> $2  -- cosine distance
+LIMIT 5
+```
 
-4. Rename `.env.example` to `.env.local` and update the following:
+The top 5 most relevant chunks are injected into the system prompt. The AI walks into every call already knowing what the user has been carrying.
 
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+---
 
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+## The emotional terrain
 
-5. You can now run the Next.js local development server:
+The dashboard is a Three.js 3D heightmap built from the user's call history.
 
-   ```bash
-   npm run dev
-   ```
+**Axes:**
+- **X** — time (each call is a column of vertices)
+- **Y** — mood score (ridge height)
+- **Z** — emotional volatility (Gaussian ridge profile scaled by `sentiment_variance`)
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+**Vertex colors:**
+- Warm amber/gold — stable, high-mood sessions
+- Deep indigo/blue — low mood
+- Near-white/grey — high volatility
+- Muted teal — neutral mid-range
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+**Technique markers:** floating octahedra above each call's peak, color-coded by therapeutic technique. Hover to inspect session details via raycasting.
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+**Reward ribbon:** a `TubeGeometry` following a `CatmullRomCurve3` plotting the reward signal (mood + stability) over time behind the terrain. The tube narrows as scores improve.
 
-## Feedback and issues
+**Live updates:** Supabase Realtime pushes `UPDATE` events on the `calls` table. When post-processing completes, the terrain rebuilds with the new session's vertex in real time.
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+---
 
-## More Supabase examples
+## Database schema
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+```
+users
+  id (uuid, FK → auth.users)
+  fname, lname, email, bio
+  phone (E.164 format)
+  timezone, call_time_pref
+  created_at, updated_at
+
+calls
+  id, user_id
+  status (scheduled | in_progress | completed | missed | failed)
+  scheduled_at, started_at, ended_at
+  duration_seconds (generated: ended_at - started_at)
+  vapi_call_id
+  mood_score, sentiment_variance
+  primary_technique, session_label
+  picked_up
+
+call_turns
+  id, call_id, user_id
+  role (user | assistant)
+  content, turn_index
+  spoken_at
+  UNIQUE (call_id, turn_index)
+
+memory_chunks
+  id, user_id, call_id
+  content
+  embedding (vector(384))
+  themes[], entities[]
+  created_at
+  INDEX: hnsw (embedding vector_cosine_ops)
+```
+
+Row-level security is enabled on all tables. All policies use `auth.uid() = user_id`. The Supabase service role key is used only server-side in API routes for webhook writes that cannot be user-authenticated.
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 16 (App Router, TypeScript) |
+| Database | Supabase (PostgreSQL, pgvector, Auth, Realtime) |
+| Call orchestration | Vapi.ai |
+| PSTN | Twilio |
+| Speech-to-text | Deepgram nova-2 |
+| Text-to-speech | ElevenLabs |
+| AI model | Qwen3-8B (RLHF fine-tuned), served via vllm |
+| Model tunnel | Cloudflare Tunnel |
+| Post-call analysis | Groq (Llama 3.1 8B Instant) |
+| Embeddings | Transformers.js — `all-MiniLM-L6-v2`, fully local |
+| 3D visualization | Three.js r128 |
+
+---
+
+## Running locally
+
+### Environment variables
+
+```bash
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Vapi
+VAPI_API_KEY=
+VAPI_PHONE_NUMBER_ID=
+VAPI_ASSISTANT_ID=
+
+# ElevenLabs
+ELEVENLABS_VOICE_ID=
+
+# Groq
+GROQ_API_KEY=
+
+# Model endpoint
+MODEL_ENDPOINT=https://your-cloudflare-tunnel.trycloudflare.com/v1
+
+# Internal route guard
+INTERNAL_SECRET=
+
+# App URL
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
+```
+
+### Start dev environment
+
+```bash
+# Terminal 1 — Next.js
+npm install && npm run dev
+
+# Terminal 2 — ngrok (webhook tunnel)
+npx ngrok http --domain=your-static-domain.ngrok-free.app 3000
+
+# Terminal 3 — model server (on model machine)
+python -m vllm.entrypoints.openai.api_server \
+  --model ./your-finetuned-weights \
+  --served-model-name psycho \
+  --host 0.0.0.0 --port 8000
+
+# Terminal 4 — Cloudflare tunnel (on model machine)
+cloudflared tunnel --url http://localhost:8000
+```
+
+### Update Vapi webhook URL after ngrok restart
+
+```bash
+curl -X PATCH https://api.vapi.ai/assistant/YOUR_ASSISTANT_ID \
+  -H "Authorization: Bearer YOUR_VAPI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"serverUrl": "https://your-ngrok-domain.ngrok-free.app/api/vapi/webhook"}'
+```
+
+---
+
+## Roadmap
+
+- Scheduled daily calls via Vercel cron at each user's preferred call time
+- Identity web — D3 force-directed graph of entities and themes across sessions
+- Weekly email summary of mood trends and recurring topics via Resend
+- Crisis detection — post-call flagging and automatic resource outreach
