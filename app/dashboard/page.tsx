@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import DashboardClient from './DashboardClient'
+import { Suspense } from 'react'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -63,6 +64,7 @@ export default async function DashboardPage() {
   }
 
   return (
+    <Suspense fallback = {null}>
     <DashboardClient
       initialCalls={terrainCalls}
       userId={user.id}
@@ -70,6 +72,7 @@ export default async function DashboardPage() {
       streakDays={streakDays}
       sessionDates={sessionDates}
     />
+    </Suspense>
   )
 }
 
