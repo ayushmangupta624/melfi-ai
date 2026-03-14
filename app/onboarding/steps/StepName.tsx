@@ -1,7 +1,7 @@
 'use client'
 
 import { OnboardingData } from '../page'
-import { StepLabel, StepHeading, StepSub, Input, Button } from '../components'
+import { StepHeading, StepSub, Input, Button } from '../components'
 
 interface Props {
   data: OnboardingData
@@ -19,8 +19,7 @@ export default function StepName({ data, update, onNext }: Props) {
 
   return (
     <div>
-      <StepLabel>Step 1 of 4</StepLabel>
-      <StepHeading>What should we call you?</StepHeading>
+<StepHeading>What should we call you?</StepHeading>
       <StepSub>Your name helps the AI address you naturally during calls.</StepSub>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
