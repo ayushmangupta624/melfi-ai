@@ -305,9 +305,12 @@ export default function LandingPage() {
       {/* content sits above the fixed purple canvas (z-index:1) */}
       <div style={{ position: 'relative', zIndex: 2 }}>
       {/* ── Navbar ── */}
-      <nav className="fixed top-0 left-0 right-0 z-30 py-5 px-8 border-b" style={{ backgroundColor: T.bg, borderColor: T.border }}>
+      <nav className="fixed top-0 left-0 right-0 z-30 py-5 px-8 border-b overflow-visible" style={{ backgroundColor: T.bg, borderColor: T.border }}>
         <div className="flex justify-between items-center w-full max-w-6xl mx-auto">
-          <Link href="/landing" className="text-xl font-bold tracking-tight" style={{ color: T.text }}>{PROJECT_NAME}</Link>
+          <Link href="/landing" className="flex items-center gap-2.5">
+            <img src="/melfi-removebg-preview.png" alt="Melfi" style={{ height: 80, width: 'auto', marginTop: -16, marginBottom: -16 }} />
+            {/* <span className="text-xl font-bold tracking-tight" style={{ color: T.text }}>{PROJECT_NAME}</span> */}
+          </Link>
           <div className="hidden md:flex items-center gap-8 text-sm">
             <a href="#features" style={{ color: T.muted }} className="hover:opacity-100 transition-opacity">features</a>
             <a href="#stories"  style={{ color: T.muted }} className="hover:opacity-100 transition-opacity">stories</a>
@@ -337,6 +340,7 @@ export default function LandingPage() {
       {/* ── Hero ── */}
       <section className="pt-40 pb-24 px-8 max-w-6xl mx-auto">
         <div className="max-w-3xl">
+          {/* <img src="/melfi-removebg-preview.png" alt="Melfi" style={{ height: 96, width: 'auto', marginBottom: 24 }} /> */}
           <p className="text-sm font-medium mb-6" style={{ color: T.accent }}>AI · Voice · Mental Wellness</p>
           <h1 className="text-6xl md:text-7xl font-bold leading-tight tracking-tight mb-6" style={{ color: T.text }}>
             Welcome to <span className="font-bold">{PROJECT_NAME}.</span>
@@ -409,7 +413,10 @@ export default function LandingPage() {
       {/* ── Footer ── */}
       <footer className="border-t px-8 py-8" style={{ borderColor: T.border }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between text-xs" style={{ color: T.muted }}>
-          <span className="font-semibold">{PROJECT_NAME}® 2026</span>
+          <span className="flex items-center gap-2 font-semibold">
+            <img src="/melfi-removebg-preview.png" alt="Melfi" style={{ height: 20, width: 'auto' }} />
+            {PROJECT_NAME}® 2026
+          </span>
           <div className="flex gap-6">
             <a href="#" className="hover:opacity-100 transition-opacity">privacy</a>
             <a href="#" className="hover:opacity-100 transition-opacity">terms</a>

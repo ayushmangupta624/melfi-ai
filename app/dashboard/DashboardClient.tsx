@@ -338,18 +338,18 @@ function DashboardView({ calls, isCallActive, setIsCallActive, userName }: {
 
       {/* Metric cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18, marginBottom: 22 }}>
-        <MetricCard icon="📊" title="Total Sessions" value={calls.length} suffix="sessions"
+        <MetricCard icon="" title="Total Sessions" value={calls.length} suffix="sessions"
           percent={Math.min(calls.length / 30 * 100, 100)} color="#c2410c"
           sub={metrics.thisMonth > 0 ? `+${metrics.thisMonth} this month` : 'Start your first session'} />
-        <MetricCard icon="😊" title="Avg Mood Score"
+        <MetricCard icon="" title="Avg Mood Score"
           value={calls.length > 0 ? metrics.avgMood.toFixed(1) : '—'} suffix={calls.length > 0 ? '/10' : ''}
           percent={calls.length > 0 ? (metrics.avgMood / 10) * 100 : 0} color="#f97316"
           sub={calls.length > 0 ? (metrics.avgMood >= 6 ? 'Positive trend' : 'Keep going') : undefined} />
-        <MetricCard icon="🧘" title="Session Stability"
+        <MetricCard icon="" title="Session Stability"
           value={calls.length > 0 ? Math.round(metrics.avgStability * 100) : '—'} suffix={calls.length > 0 ? '%' : ''}
           percent={calls.length > 0 ? metrics.avgStability * 100 : 0} color="#7c3aed"
           sub={calls.length > 0 ? (metrics.avgStability >= 0.7 ? 'Very consistent' : 'Building rhythm') : undefined} />
-        <MetricCard icon="📅" title="This Month" value={metrics.thisMonth} suffix="sessions"
+        <MetricCard icon="" title="This Month" value={metrics.thisMonth} suffix="sessions"
           percent={Math.min(metrics.thisMonth / 10 * 100, 100)} color="#059669"
           sub={metrics.thisMonth > 0 ? `${metrics.thisMonth} check-in${metrics.thisMonth !== 1 ? 's' : ''}` : 'None yet this month'} />
       </div>
