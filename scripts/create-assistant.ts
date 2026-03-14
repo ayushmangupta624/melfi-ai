@@ -1,4 +1,3 @@
-// scripts/create-assistant.ts
 import 'dotenv/config'
 
 async function main() {
