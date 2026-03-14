@@ -34,13 +34,34 @@ export default async function DashboardPage() {
     .eq('status', 'completed')
     .order('scheduled_at', { ascending: true })
 
+  const { data: memories } = await supabase
+  .from('memory_chunks')
+  .select('call_id, content')
+  .eq('user_id', user.id)
+
+  const memoryMap = Object.fromEntries(
+    (memories ?? []).map(m => [m.call_id, m.content])
+  )
+  
+
+
   // Map DB shape → terrain shape
+  // const terrainCalls = (calls ?? []).map((c, i) => ({
+  //   id:         c.id,
+  //   mood:       c.mood_score      ?? 3,
+  //   volatility: c.sentiment_variance ?? 0.5,
+  //   technique:  mapTechnique(c.primary_technique),
+  //   label:      c.session_label   ?? `Session ${i + 1}`,
+  // }))
   const terrainCalls = (calls ?? []).map((c, i) => ({
     id:         c.id,
-    mood:       c.mood_score      ?? 3,
+    mood:       (c.mood_score ?? 3) * 2,
     volatility: c.sentiment_variance ?? 0.5,
     technique:  mapTechnique(c.primary_technique),
     label:      c.session_label   ?? `Session ${i + 1}`,
+    date:       c.scheduled_at,   
+    memory:     memoryMap[c.id] ?? null,
+
   }))
 
   return <DashboardClient initialCalls={terrainCalls} userId={user.id} />
