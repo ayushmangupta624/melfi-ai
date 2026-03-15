@@ -1,222 +1,153 @@
-# TherapistRL
+## Inspiration
 
-> *An AI therapist that calls you daily, remembers everything, and gets to know you over time.*
+Melfi started with our own personal challenges: needing support and someone to talk to. Traditional therapy is often expensive and inaccessible for many, and there was a need for a tool that fills this gap while feeling real and present. 
 
-TherapistRL is a voice-first AI therapy system that conducts daily check-in calls via your real phone number. After each call, it analyzes the transcript, extracts what mattered, embeds it into a persistent memory store, and walks into the next call already knowing your context. Your emotional history is rendered as a navigable 3D terrain — peaks are good days, valleys are hard ones, and the texture reflects how stable or volatile each session was.
+## What it does
 
----
+Melfi is an AI therapist that calls you on your phone for a conversation. It remembers what you've talked about across sessions, adapts its approach based on what you share, and visualizes your emotional history as a navigable 3D terrain. This allows you to zoom out and visually see your low points, breakthroughs, all the slow, hard work in between. 
 
-## What makes this different
+## Technical Specifications
 
-Most AI therapy products are chat interfaces. TherapistRL makes real outbound phone calls to your mobile number using a custom RLHF fine-tuned therapy model. The AI remembers who you've mentioned, what stresses you out, and how your mood has trended — not because you filled out a profile, but because it has been listening across every session and building a semantic memory of your emotional landscape.
-
----
-
-## The model
-
-The conversational AI is a Qwen3-8B model fine-tuned using RLHF on curated therapy dialogue datasets. The fine-tuning process aligned the model toward core therapeutic techniques: reflective listening, Socratic questioning, cognitive reframing, and somatic grounding. Chain-of-thought reasoning is disabled at the server level for low-latency real-time voice response.
-
-The model is self-hosted, served via vllm with an OpenAI-compatible `/v1/chat/completions` endpoint, and exposed over HTTPS via Cloudflare Tunnel.
-
----
-
-## System architecture
-
+ 
+### Architecture
+ 
 ```
-User clicks "Start check-in call"
-  → /api/calls/initiate
-      → fetch top 5 memory chunks from pgvector (cosine similarity)
-      → create calls row in Supabase
-      → POST to Vapi API with phone number + memory context
-
-Vapi orchestrates the call
-  → Twilio dials the user's real phone number (PSTN)
-  → Deepgram transcribes speech in real time (nova-2)
-  → Qwen3-8B generates therapeutic responses
-  → ElevenLabs synthesizes speech and plays it through the phone
-
-Vapi fires webhook events → /api/vapi/webhook
-  → status-update:        set started_at, picked_up = true
-  → conversation-update:  upsert turns to call_turns
-  → end-of-call-report:   mark completed, trigger post-processing
-  → call-failed:          mark missed or failed
-
-/api/calls/process (async, after call ends)
-  → Groq (Llama 3.1 8B) analyzes transcript
-      → mood_score, sentiment_variance, primary_technique,
-         session_label, themes[], entities[], memory_summary
-  → update calls row with analysis results
-  → embed memory_summary via Transformers.js (local, no API)
-  → store embedding + metadata in memory_chunks (pgvector)
+┌─────────────────────────────────────────────────────────────────────┐
+│                          User's Phone                                │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │ PSTN outbound call
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                            Vapi.ai                                   │
+│                                                                      │
+│   Twilio (dial-out) → Deepgram nova-2 (STT) → ElevenLabs (TTS)     │
+│                              │                                       │
+│                    conversation turns                                │
+│                              │                                       │
+│                              ▼                                       │
+│              POST /v1/chat/completions                               │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │ OpenAI-compatible API
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Self-hosted Model Server                         │
+│                                                                      │
+│   Qwen3-8B (RLHF/DPO fine-tuned) served via vllm                   │
+│   Exposed over Cloudflare Tunnel (HTTPS)                            │
+└─────────────────────────────────────────────────────────────────────┘
+ 
+                    ── call ends ──
+ 
+┌─────────────────────────────────────────────────────────────────────┐
+│                      Vapi Webhook                                    │
+│              POST /api/vapi/webhook (Next.js)                       │
+│                                                                      │
+│   end-of-call-report → full transcript → trigger post-processing   │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Post-call Pipeline                                │
+│                   /api/calls/process                                 │
+│                                                                      │
+│  1. Groq (Llama 3.1 8B)                                             │
+│     └─ mood score, sentiment variance, session label,               │
+│        themes, named entities, memory summary                       │
+│                                                                      │
+│  2. Hugging Face Inference API                                       │
+│     └─ sentence-transformers/all-MiniLM-L6-v2                      │
+│        → 384-dim embedding of memory summary                        │
+│                                                                      │
+│  3. Supabase                                                         │
+│     ├─ UPDATE calls (mood_score, session_label, ...)                │
+│     └─ INSERT memory_chunks (content + vector embedding)            │
+└─────────────────────────────────────────────────────────────────────┘
+ 
+                    ── next call ──
+ 
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Memory Retrieval (RAG)                            │
+│                   /api/calls/initiate                                │
+│                                                                      │
+│   SELECT content FROM memory_chunks                                 │
+│   ORDER BY embedding <=> query_vector   ← cosine similarity        │
+│   LIMIT 5                                                            │
+│                                                                      │
+│   → injected into Vapi system prompt as {{memory}}                 │
+└─────────────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## Memory and RAG
-
-Between calls, a RAG layer builds a persistent semantic memory of the user. After each call:
-
-1. Groq extracts a 1-2 sentence memory summary, recurring themes, and named entities from the transcript
-2. The summary is embedded using `all-MiniLM-L6-v2` running locally via Transformers.js — no external API, no cost, 384-dimensional vectors
-3. The embedding is stored in Supabase's pgvector column alongside themes and entities
-
-Before the next call, the initiate route queries:
-```sql
-SELECT content FROM memory_chunks
-WHERE user_id = $1
-ORDER BY embedding <=> $2  -- cosine distance
-LIMIT 5
+ 
+### The Model
+ 
+The conversational AI is a **Qwen3-8B** model fine-tuned using **Reinforcement Learning from Human Feedback (RLHF)** via the **Direct Preference Optimization (DPO)** algorithm on the **Psychotherapy-LLM dataset** (36,000 rows of real therapist-client dialogue). DPO trains the model by directly optimizing on preference pairs — responses rated more therapeutically effective are reinforced, less effective ones are pushed away — without requiring a separate reward model.
+ 
+The result is a model that has internalized therapeutic techniques including reflective listening, Socratic questioning, cognitive reframing, and somatic grounding, rather than just following instructions to use them.
+ 
+Chain-of-thought reasoning is disabled at the server level for low-latency voice response. The model is self-hosted on our own hardware, served via **vllm** (OpenAI-compatible `/v1/chat/completions` endpoint), and exposed over HTTPS via **Cloudflare Tunnel**.
+ 
+### Voice Pipeline
+ 
+| Stage | Technology | Role |
+|-------|-----------|------|
+| Call initiation | Vapi + Twilio | Outbound PSTN dial to user's real phone number |
+| Speech-to-text | Deepgram nova-2 | Real-time streaming transcription |
+| Language model | Qwen3-8B (self-hosted) | Therapeutic response generation |
+| Text-to-speech | ElevenLabs | Neural voice synthesis |
+| Orchestration | Vapi.ai | Manages the full call lifecycle and webhook events |
+ 
+### Memory System
+ 
+After each call ends, Vapi fires an `end-of-call-report` webhook containing the full transcript. The post-call pipeline runs asynchronously:
+ 
+1. **Transcript analysis** — Groq (Llama 3.1 8B Instant, JSON mode) extracts structured data: mood score (1–10), sentiment variance (0–1), primary therapeutic technique, session label, recurring themes, named entities, and a 1–2 sentence memory summary.
+ 
+2. **Embedding** — The memory summary is embedded via the Hugging Face Inference API using `sentence-transformers/all-MiniLM-L6-v2`, producing a 384-dimensional vector.
+ 
+3. **Storage** — The embedding and raw text are stored in Supabase's `memory_chunks` table with a `vector(384)` column indexed using **HNSW** (`vector_cosine_ops`) for fast approximate nearest-neighbour search.
+ 
+4. **Retrieval** — Before the next call, the 5 most semantically relevant memory chunks are retrieved via cosine similarity search and injected into the system prompt. The model walks into every call already knowing the user's context.
+ 
+### Emotional Terrain Visualization
+ 
+The dashboard renders the user's call history as a navigable **Three.js** heightmap:
+ 
+- **X axis** — time (each call is a column of vertices)
+- **Y axis** — emotional volatility (high volatility = tall, turbulent ridge)
+- **Z axis** — mood (high mood = wide, gentle hill; low mood = narrow, pinched spike)
+ 
+The terrain uses a custom **GLSL ShaderMaterial** with:
+- Per-vertex mood and volatility attributes interpolated smoothly between sessions
+- Animated topographic contour lines flowing across the surface in the fragment shader
+- Simplex noise displacement in the vertex shader for organic micro-detail
+- Mood-driven vertex colours (dusty rose → terracotta → warm amber-gold)
+- Mood-coloured octahedron markers at each session's peak, hoverable to surface the date, session label, and memory summary
+ 
+Supabase Realtime pushes `UPDATE` events when post-processing completes — the terrain rebuilds with a new vertex in real time at the end of a live call.
+ 
+### Database Schema
+ 
 ```
-
-The top 5 most relevant chunks are injected into the system prompt. The AI walks into every call already knowing what the user has been carrying.
-
----
-
-## The emotional terrain
-
-The dashboard is a Three.js 3D heightmap built from the user's call history.
-
-**Axes:**
-- **X** — time (each call is a column of vertices)
-- **Y** — mood score (ridge height)
-- **Z** — emotional volatility (Gaussian ridge profile scaled by `sentiment_variance`)
-
-**Vertex colors:**
-- Warm amber/gold — stable, high-mood sessions
-- Deep indigo/blue — low mood
-- Near-white/grey — high volatility
-- Muted teal — neutral mid-range
-
-**Technique markers:** floating octahedra above each call's peak, color-coded by therapeutic technique. Hover to inspect session details via raycasting.
-
-**Reward ribbon:** a `TubeGeometry` following a `CatmullRomCurve3` plotting the reward signal (mood + stability) over time behind the terrain. The tube narrows as scores improve.
-
-**Live updates:** Supabase Realtime pushes `UPDATE` events on the `calls` table. When post-processing completes, the terrain rebuilds with the new session's vertex in real time.
-
----
-
-## Database schema
-
+users           — profile, phone, timezone, call_time_pref
+calls           — status, mood_score, sentiment_variance, session_label, vapi_call_id
+call_turns      — per-utterance transcript, role, turn_index (UNIQUE constraint)
+memory_chunks   — content, embedding vector(384), themes[], entities[]
 ```
-users
-  id (uuid, FK → auth.users)
-  fname, lname, email, bio
-  phone (E.164 format)
-  timezone, call_time_pref
-  created_at, updated_at
-
-calls
-  id, user_id
-  status (scheduled | in_progress | completed | missed | failed)
-  scheduled_at, started_at, ended_at
-  duration_seconds (generated: ended_at - started_at)
-  vapi_call_id
-  mood_score, sentiment_variance
-  primary_technique, session_label
-  picked_up
-
-call_turns
-  id, call_id, user_id
-  role (user | assistant)
-  content, turn_index
-  spoken_at
-  UNIQUE (call_id, turn_index)
-
-memory_chunks
-  id, user_id, call_id
-  content
-  embedding (vector(384))
-  themes[], entities[]
-  created_at
-  INDEX: hnsw (embedding vector_cosine_ops)
-```
-
-Row-level security is enabled on all tables. All policies use `auth.uid() = user_id`. The Supabase service role key is used only server-side in API routes for webhook writes that cannot be user-authenticated.
-
----
-
-## Tech stack
-
+ 
+All tables have Row Level Security enabled. Every policy gates on `auth.uid() = user_id`. The Supabase service role key is used only server-side for webhook writes that have no user session.
+ 
+### Stack
+ 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Next.js 16 (App Router, TypeScript) |
 | Database | Supabase (PostgreSQL, pgvector, Auth, Realtime) |
 | Call orchestration | Vapi.ai |
 | PSTN | Twilio |
-| Speech-to-text | Deepgram nova-2 |
-| Text-to-speech | ElevenLabs |
-| AI model | Qwen3-8B (RLHF fine-tuned), served via vllm |
+| STT | Deepgram nova-2 |
+| TTS | ElevenLabs |
+| AI model | Qwen3-8B (RLHF/DPO fine-tuned), vllm |
 | Model tunnel | Cloudflare Tunnel |
-| Post-call analysis | Groq (Llama 3.1 8B Instant) |
-| Embeddings | Transformers.js — `all-MiniLM-L6-v2`, fully local |
+| Post-call analysis | Groq — Llama 3.1 8B Instant |
+| Embeddings | Hugging Face — sentence-transformers/all-MiniLM-L6-v2 |
 | 3D visualization | Three.js r128 |
-
----
-
-## Running locally
-
-### Environment variables
-
-```bash
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-
-# Vapi
-VAPI_API_KEY=
-VAPI_PHONE_NUMBER_ID=
-VAPI_ASSISTANT_ID=
-
-# ElevenLabs
-ELEVENLABS_VOICE_ID=
-
-# Groq
-GROQ_API_KEY=
-
-# Model endpoint
-MODEL_ENDPOINT=https://your-cloudflare-tunnel.trycloudflare.com/v1
-
-# Internal route guard
-INTERNAL_SECRET=
-
-# App URL
-NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
-```
-
-### Start dev environment
-
-```bash
-# Terminal 1 — Next.js
-npm install && npm run dev
-
-# Terminal 2 — ngrok (webhook tunnel)
-npx ngrok http --domain=your-static-domain.ngrok-free.app 3000
-
-# Terminal 3 — model server (on model machine)
-python -m vllm.entrypoints.openai.api_server \
-  --model ./your-finetuned-weights \
-  --served-model-name psycho \
-  --host 0.0.0.0 --port 8000
-
-# Terminal 4 — Cloudflare tunnel (on model machine)
-cloudflared tunnel --url http://localhost:8000
-```
-
-### Update Vapi webhook URL after ngrok restart
-
-```bash
-curl -X PATCH https://api.vapi.ai/assistant/YOUR_ASSISTANT_ID \
-  -H "Authorization: Bearer YOUR_VAPI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"serverUrl": "https://your-ngrok-domain.ngrok-free.app/api/vapi/webhook"}'
-```
-
----
-
-## Roadmap
-
-- Scheduled daily calls via Vercel cron at each user's preferred call time
-- Identity web — D3 force-directed graph of entities and themes across sessions
-- Weekly email summary of mood trends and recurring topics via Resend
-- Crisis detection — post-call flagging and automatic resource outreach
+| Deployment | Vercel |
