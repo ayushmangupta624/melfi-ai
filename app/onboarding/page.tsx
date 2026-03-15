@@ -259,7 +259,7 @@ export default function OnboardingPage() {
         </div>
 
         <div style={{ marginTop: 32, fontSize: 10, color: T.muted, letterSpacing: '0.2em', fontWeight: 600 }}>
-          MINDSPACE
+          MELFI
         </div>
       </div>
     </div>
