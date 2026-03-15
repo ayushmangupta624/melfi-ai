@@ -1,6 +1,7 @@
-## Inspiration
+## Inspiration: Human Empowerment!
 
-Melfi started with our own personal challenges: needing support and someone to talk to. Traditional therapy is often expensive and inaccessible for many, and there was a need for a tool that fills this gap while feeling real and present. 
+Melfi started with our own personal challenges: needing support and someone to talk to. Traditional therapy is often expensive and inaccessible for many, and there was a need for a tool that fills this gap while feeling real and present. With Melfi, users can feel more empowered in their lives by having a safe space to process their emotions. 
+
 
 ## What it does
 
