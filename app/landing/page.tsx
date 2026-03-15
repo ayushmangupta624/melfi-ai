@@ -194,7 +194,7 @@ const FEATURES = [
   { icon: '', title: 'adaptive techniques',    description: 'Reflective listening and cognitive reframing tailored to you.' },
   { icon: '', title: 'emotional terrain',      description: 'Visualize your mood journey over time with a beautiful 3D emotional landscape unique to your sessions.' },
   { icon: '', title: 'private & secure',       description: 'Your conversations are yours. End-to-end security powered by Supabase and our privately hosted model ensures your data stays private.' },
-  { icon: '', title: 'always available',       description: 'No scheduling, no waitlists. Start a session whenever you need — day or night.' },
+  { icon: '', title: 'always available',       description: 'No scheduling, no waitlists. Start a session whenever you need, day or night.' },
   { icon: '', title: 'grows with you',         description: 'The AI builds a memory of your history, so every session picks up right where you left off.' },
 ]
 
@@ -273,7 +273,7 @@ export default function LandingPage() {
       </div>
 
       {/* ── Coil controls panel ── */}
-      <div className="fixed bottom-6 left-6 z-50" style={{ width: '200px' }}>
+      {/* <div className="fixed bottom-6 left-6 z-50" style={{ width: '200px' }}>
         <button
           onClick={() => setShowPanel(v => !v)}
           className="w-full text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors"
@@ -300,7 +300,7 @@ export default function LandingPage() {
             </button>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* content sits above the fixed purple canvas (z-index:1) */}
       <div style={{ position: 'relative', zIndex: 2 }}>
