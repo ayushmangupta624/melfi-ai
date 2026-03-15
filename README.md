@@ -83,7 +83,7 @@ The conversational AI is a **Qwen3-8B** model fine-tuned using **Reinforcement L
  
 The result is a model that has internalized therapeutic techniques including reflective listening, Socratic questioning, cognitive reframing, and somatic grounding, rather than just following instructions to use them.
  
-Chain-of-thought reasoning is disabled at the server level for low-latency voice response. The model is self-hosted on our own hardware, served via **vllm** (OpenAI-compatible `/v1/chat/completions` endpoint), and exposed over HTTPS via **Cloudflare Tunnel**.
+Chain-of-thought reasoning is disabled at the server level for low-latency voice response. The model is self-hosted on our own server, served via **vllm** (OpenAI-compatible `/v1/chat/completions` endpoint), and exposed over HTTPS via **Cloudflare Tunnel**.
  
 ### Voice Pipeline
  
