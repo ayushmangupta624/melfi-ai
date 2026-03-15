@@ -371,7 +371,7 @@ function DashboardView({ calls, isCallActive, setIsCallActive, userName }: {
           {isCallActive && <span style={{ fontSize: 12, fontWeight: 600, color: '#c2410c' }}>● Live</span>}
         </div>
         <div style={{ height: 420 }}>
-          <EmotionalTerrain calls={calls.length > 0 ? calls : undefined} liveMode={isCallActive} />
+          <EmotionalTerrain calls={calls} liveMode={isCallActive} />
         </div>
       </div>
 

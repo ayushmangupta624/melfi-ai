@@ -709,7 +709,7 @@ interface EmotionalTerrainProps {
   liveMode?: boolean
 }
 
-const SAMPLE_CALLS: CallData[] = [
+export const SAMPLE_CALLS: CallData[] = [
   { id: 1,  mood: 3.2, volatility: 0.8, technique: 'reflective', label: 'Work stress surfaced',           date: '2026-02-14', memory: 'Felt overwhelmed by deadlines and avoided confronting the root cause at work.' },
   { id: 2,  mood: 2.8, volatility: 1.1, technique: 'somatic',    label: 'Sleep issues emerged',           date: '2026-02-15', memory: 'Sleep has been broken for weeks. Exhaustion is making everything harder to cope with.' },
   { id: 3,  mood: 3.5, volatility: 0.6, technique: 'reframing',  label: 'Started questioning the job',    date: '2026-02-16', memory: 'Began questioning whether the job itself is the real issue, or just the symptom.' },
@@ -852,7 +852,7 @@ const fragmentShader = `
   }
 `
 
-export default function EmotionalTerrain({ calls = SAMPLE_CALLS, liveMode = false }: EmotionalTerrainProps) {
+export default function EmotionalTerrain({ calls = [], liveMode = false }: EmotionalTerrainProps) {
   const mountRef       = useRef<HTMLDivElement>(null)
   const rendererRef    = useRef<THREE.WebGLRenderer | null>(null)
   const sceneRef       = useRef<THREE.Scene | null>(null)
@@ -875,6 +875,7 @@ export default function EmotionalTerrain({ calls = SAMPLE_CALLS, liveMode = fals
   const STEP = 1.6
 
   const buildTerrain = useCallback((scene: THREE.Scene) => {
+    if (callsRef.current.length === 0) return
     if (terrainRef.current) { scene.remove(terrainRef.current); terrainRef.current.geometry.dispose(); (terrainRef.current.material as THREE.Material).dispose() }
     if (wireRef.current)    { scene.remove(wireRef.current);    wireRef.current.geometry.dispose();    (wireRef.current.material as THREE.Material).dispose() }
 
@@ -959,6 +960,7 @@ export default function EmotionalTerrain({ calls = SAMPLE_CALLS, liveMode = fals
   }, [])
 
   const buildMarkers = useCallback((scene: THREE.Scene) => {
+    if (callsRef.current.length === 0) return
     markersRef.current.forEach(m => scene.remove(m))
     stemsRef.current.forEach(s => scene.remove(s))
     ringsRef.current.forEach(r => scene.remove(r))
@@ -1258,6 +1260,22 @@ export default function EmotionalTerrain({ calls = SAMPLE_CALLS, liveMode = fals
       boxShadow: '0 1px 3px rgba(28,25,23,0.06), 0 8px 32px rgba(28,25,23,0.04)',
     }}>
       <div ref={mountRef} style={{ width: '100%', height: '100%', cursor: 'grab' }} />
+
+{calls.length === 0 && (
+  <div style={{
+    position: 'absolute', inset: 0,
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    pointerEvents: 'none',
+  }}>
+    <div style={{ fontSize: 13, color: 'rgba(28,25,23,0.3)', letterSpacing: '0.08em', marginBottom: 8 }}>
+      No sessions yet
+    </div>
+    <div style={{ fontSize: 11, color: 'rgba(28,25,23,0.2)', letterSpacing: '0.06em' }}>
+      Your terrain will build after your first call
+    </div>
+  </div>
+)}
 
       <div style={{ position: 'absolute', top: 22, left: 26, pointerEvents: 'none' }}>
         <div style={{ fontSize: 10, letterSpacing: '0.18em', color: '#c2410c', textTransform: 'uppercase', marginBottom: 5 }}>Emotional Terrain</div>

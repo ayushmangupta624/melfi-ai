@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import EmotionalTerrain from '@/components/EmotionalTerrain'
+import EmotionalTerrain, { SAMPLE_CALLS } from '@/components/EmotionalTerrain'
 import { useState, useEffect, useRef } from 'react'
 
 // ── Drifting trochoid ─────────────────────────────────────────────────────────
@@ -354,7 +354,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="mt-20 w-full rounded-3xl overflow-hidden border" style={{ height: '520px', borderColor: T.border }}>
-          <EmotionalTerrain />
+          <EmotionalTerrain calls = {SAMPLE_CALLS}/>
         </div>
       </section>
 
