@@ -1,5 +1,7 @@
 ## Top 10 Finalist at GenAI Genesis 2026!
 
+<img width="1920" height="1058" alt="image" src="https://github.com/user-attachments/assets/378c3aaf-5991-43a0-a9b8-96a4e0d423a6" />
+
 ## Inspiration: Human Empowerment!
 
 Melfi started with our own personal challenges: needing support and someone to talk to. Traditional therapy is often expensive and inaccessible for many, and there was a need for a tool that fills this gap while feeling real and present. With Melfi, users can feel more empowered in their lives by having a safe space to process their emotions. 
