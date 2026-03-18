@@ -1,3 +1,5 @@
+## Top 10 Finalist at GenAI Genesis 2026!
+
 ## Inspiration: Human Empowerment!
 
 Melfi started with our own personal challenges: needing support and someone to talk to. Traditional therapy is often expensive and inaccessible for many, and there was a need for a tool that fills this gap while feeling real and present. With Melfi, users can feel more empowered in their lives by having a safe space to process their emotions. 
@@ -152,3 +154,7 @@ All tables have Row Level Security enabled. Every policy gates on `auth.uid() = 
 | Embeddings | Hugging Face — sentence-transformers/all-MiniLM-L6-v2 |
 | 3D visualization | Three.js r128 |
 | Deployment | Vercel |
+
+---
+
+<small>Built in 36 hours at GenAI Genesis 2026</small>
